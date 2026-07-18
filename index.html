@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caffeine Half-Life Calculator — How Much Caffeine Is Left in Your System?</title>
+<meta name="description" content="Free caffeine half-life calculator. Add your coffee, tea, or energy drinks and see how much caffeine is still in your body now, at bedtime, and hour by hour.">
+<link rel="canonical" href="https://stonemanenterprisesllc-droid.github.io/caffeine-calculator/">
+<style>
+:root{--accent:#b45309;--accent-dark:#92400e}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6;color:#1f2937;background:#f8fafc}
+header{background:var(--accent);color:#fff;padding:1rem}
+header .wrap{max-width:760px;margin:0 auto}
+header a{color:#fff;text-decoration:none;font-weight:700;font-size:1.2rem}
+main{max-width:760px;margin:0 auto;padding:1rem}
+h1{font-size:1.5rem;margin:.75rem 0 .25rem}
+.tagline{color:#6b7280;margin-bottom:1rem}
+.tool{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+label{font-weight:600;display:block;margin:.5rem 0 .25rem}
+select,input{padding:.55rem;border:2px solid #d1d5db;border-radius:8px;font-size:1rem;font-family:inherit}
+.addrow{display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end}
+.addrow>div{display:flex;flex-direction:column}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:.65rem 1.2rem;font-size:1rem;font-weight:700;cursor:pointer}
+.btn:hover{background:var(--accent-dark)}
+.btn.small{padding:.4rem .8rem;font-size:.85rem;background:#fff;color:#b91c1c;border:1px solid #fca5a5}
+#drinks{margin:.75rem 0;padding:0;list-style:none}
+#drinks li{display:flex;justify-content:space-between;align-items:center;padding:.4rem .6rem;border:1px solid #e5e7eb;border-radius:8px;margin:.35rem 0;background:#fffbeb}
+details.opts{margin:.5rem 0}
+details.opts summary{cursor:pointer;color:var(--accent);font-weight:600}
+details.opts label{display:inline-block;margin-right:1rem;font-weight:400}
+details.opts input{width:5rem}
+#results{display:none;margin-top:1rem}
+.stat-row{display:flex;gap:.6rem;flex-wrap:wrap;margin:.5rem 0 1rem}
+.stat{flex:1;min-width:150px;border:2px solid #e5e7eb;border-radius:10px;padding:.7rem;text-align:center}
+.stat .v{font-size:1.4rem;font-weight:800;color:var(--accent)}
+.stat .l{font-size:.8rem;color:#6b7280}
+.stat.ok{border-color:#16a34a}.stat.ok .v{color:#16a34a}
+.stat.warn{border-color:#dc2626}.stat.warn .v{color:#dc2626}
+table.decay{width:100%;border-collapse:collapse;font-size:.95rem}
+table.decay th,table.decay td{padding:.4rem .5rem;border-bottom:1px solid #e5e7eb;text-align:left}
+table.decay .bar{background:#fde68a;height:.7rem;border-radius:4px}
+.note{font-size:.9rem;color:#6b7280;margin-top:.5rem}
+.ad-slot{margin:1rem 0}
+article h2{margin:1.5rem 0 .5rem;font-size:1.2rem}
+article p,article li{margin:.5rem 0}
+article ul{padding-left:1.4rem}
+footer{max-width:760px;margin:2rem auto;padding:1rem;font-size:.85rem;color:#6b7280;border-top:1px solid #e5e7eb}
+footer a{color:#6b7280;margin-right:1rem}
+</style>
+</head>
+<body>
+<header><div class="wrap"><a href="./">Caffeine Half-Life Calculator</a></div></header>
+<main>
+<h1>Caffeine Calculator: How Much Is Still in Your System?</h1>
+<p class="tagline">Add what you drank and when — see your caffeine level now, at bedtime, and hour by hour.</p>
+
+<div class="tool">
+<div class="addrow">
+<div><label for="drink">Drink</label>
+<select id="drink">
+<option value="95">Coffee, brewed (8 oz) — 95 mg</option>
+<option value="63">Espresso (1 shot) — 63 mg</option>
+<option value="145">Coffee, large (12 oz) — 145 mg</option>
+<option value="47">Black tea (8 oz) — 47 mg</option>
+<option value="28">Green tea (8 oz) — 28 mg</option>
+<option value="80">Energy drink (8.4 oz) — 80 mg</option>
+<option value="160">Energy drink, large (16 oz) — 160 mg</option>
+<option value="34">Cola (12 oz) — 34 mg</option>
+<option value="200">Pre-workout (1 scoop) — 200 mg</option>
+<option value="0">Custom amount…</option>
+</select></div>
+<div id="customBox" style="display:none"><label for="customMg">mg</label><input type="number" id="customMg" value="100" min="1" max="1000" style="width:5.5rem"></div>
+<div><label for="when">Time consumed</label><input type="time" id="when"></div>
+<div><button class="btn" id="add">+ Add</button></div>
+</div>
+<ul id="drinks"></ul>
+<details class="opts">
+<summary>Options</summary>
+<div style="margin-top:.5rem">
+<label>Bedtime <input type="time" id="bed" value="22:30"></label>
+<label>Half-life (hours) <input type="number" id="half" value="5" min="2" max="12" step="0.5"></label>
+</div>
+</details>
+<div id="results" aria-live="polite">
+<div class="stat-row">
+<div class="stat"><div class="v" id="nowMg">–</div><div class="l">in your system now</div></div>
+<div class="stat" id="bedStat"><div class="v" id="bedMg">–</div><div class="l" id="bedLbl">at bedtime</div></div>
+<div class="stat"><div class="v" id="clearAt">–</div><div class="l">drops below 30 mg (sleep-safe)</div></div>
+</div>
+<table class="decay"><thead><tr><th>Time</th><th>Caffeine left</th><th style="width:45%"></th></tr></thead><tbody id="decayRows"></tbody></table>
+<p class="note">Estimates use an average adult half-life of 5 hours (adjustable in Options). General information, not medical advice.</p>
+</div>
+</div>
+
+<div class="ad-slot" data-ad="top"></div>
+
+<article>
+<h2>How the caffeine half-life calculation works</h2>
+<p>Caffeine leaves your body exponentially: every <strong>half-life</strong> — about
+<strong>5 hours</strong> for the average adult — half of what remains is metabolized. The
+formula is <em>C(t) = dose × 0.5^(t ÷ half-life)</em>. So a 200 mg pre-workout at noon is
+still 100 mg at 5 PM, 50 mg at 10 PM, and 25 mg at 3 AM. Multiple drinks stack: this
+calculator sums the remaining caffeine from every drink you add.</p>
+<h2>Why 30 mg is the "sleep-safe" line</h2>
+<p>There's no magic number, but sleep research generally finds that under roughly 30–50 mg —
+about a third of a cup of coffee — most people can fall asleep normally. Above ~100 mg at
+bedtime, expect longer time to fall asleep, less deep sleep, and more wake-ups, even if you
+do drift off. Pair this tool with our
+<a href="https://stonemanenterprisesllc-droid.github.io/sleep-cycle-calculator/">Sleep Cycle Calculator</a>
+to plan the whole night.</p>
+<h2>What changes your personal half-life?</h2>
+<ul>
+<li><strong>Faster clearance (3–4 hrs):</strong> regular smokers, some genetic fast metabolizers.</li>
+<li><strong>Average (5 hrs):</strong> most healthy adults.</li>
+<li><strong>Slower (6–10+ hrs):</strong> pregnancy, oral contraceptives, some medications, liver conditions, and slow-metabolizer genetics.</li>
+</ul>
+<p>If coffee at noon wrecks your sleep, you're probably on the slow end — set the half-life
+higher in Options and watch how the curve changes.</p>
+<h2>How much caffeine is safe per day?</h2>
+<p>The FDA cites <strong>400 mg per day</strong> as a level generally not associated with
+negative effects for healthy adults — roughly four 8-oz cups of brewed coffee. Pregnant
+people are typically advised to stay under 200 mg. This calculator is for general information
+only; talk to your doctor about your own situation.</p>
+</article>
+
+<div class="ad-slot" data-ad="bottom"></div>
+</main>
+
+<footer>
+<p><a href="./">Home</a> <a href="about.html">About</a> <a href="privacy.html">Privacy Policy</a> <a href="terms.html">Terms of Use</a></p>
+<p>&copy; 2026 Caffeine Half-Life Calculator. All rights reserved.</p>
+<p>More free tools:
+<a href="https://stonemanenterprisesllc-droid.github.io/word-scramble-maker/">Word Scramble Maker</a>
+<a href="https://stonemanenterprisesllc-droid.github.io/sleep-cycle-calculator/">Sleep Cycle Calculator</a>
+<a href="https://stonemanenterprisesllc-droid.github.io/random-phone-number-generator/">Random Phone Number Generator</a>
+<a href="https://stonemanenterprisesllc-droid.github.io/dragonborn-name-generator/">Dragonborn Name Generator</a></p>
+</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+let drinks=[];
+function nowHM(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+$('when').value=nowHM();
+$('drink').addEventListener('change',()=>{$('customBox').style.display=$('drink').value==='0'?'block':'none';});
+function fmt(d){let h=d.getHours(),m=d.getMinutes(),am=h<12?'AM':'PM';h=h%12||12;return h+':'+String(m).padStart(2,'0')+' '+am;}
+function toDate(hm){const [h,m]=hm.split(':').map(Number);const d=new Date();d.setHours(h,m,0,0);if(d>new Date())d.setDate(d.getDate()-1);return d;}
+$('add').addEventListener('click',()=>{
+ const sel=$('drink');
+ const mg=sel.value==='0'?(+$('customMg').value||0):+sel.value;
+ if(!mg)return;
+ const label=sel.value==='0'?mg+' mg custom':sel.options[sel.selectedIndex].text;
+ drinks.push({mg,label,at:toDate($('when').value)});
+ renderList();calc();
+});
+function renderList(){
+ $('drinks').innerHTML=drinks.map((d,i)=>`<li><span>${d.label} · ${fmt(d.at)}</span><button class="btn small" data-i="${i}">remove</button></li>`).join('');
+ document.querySelectorAll('#drinks button').forEach(b=>b.addEventListener('click',()=>{drinks.splice(+b.dataset.i,1);renderList();calc();}));
+}
+function remaining(at){
+ const half=(+$('half').value||5)*3600000;
+ return drinks.reduce((s,d)=>at>=d.at?s+d.mg*Math.pow(.5,(at-d.at)/half):s,0);
+}
+function calc(){
+ if(!drinks.length){$('results').style.display='none';return;}
+ const now=new Date();
+ const nowVal=remaining(now);
+ $('nowMg').textContent=Math.round(nowVal)+' mg';
+ const bed=toDate2($('bed').value);
+ const bedVal=remaining(bed);
+ $('bedMg').textContent=Math.round(bedVal)+' mg';
+ $('bedLbl').textContent='at bedtime ('+fmt(bed)+')';
+ $('bedStat').className='stat '+(bedVal<=30?'ok':bedVal>=100?'warn':'');
+ let t=new Date(now),safe=null;
+ for(let i=0;i<48*4;i++){if(remaining(t)<=30){safe=new Date(t);break;}t=new Date(t.getTime()+15*60000);}
+ $('clearAt').textContent=safe?(safe.toDateString()===now.toDateString()?fmt(safe):fmt(safe)+' tomorrow'):'>48 hrs';
+ const rows=[];const maxV=Math.max(nowVal,1);
+ for(let i=0;i<=12;i+=1){
+  const at=new Date(now.getTime()+i*3600000);
+  const v=remaining(at);
+  rows.push(`<tr><td>${i===0?'Now':'+'+i+' hr — '+fmt(at)}</td><td>${Math.round(v)} mg</td><td><div class="bar" style="width:${Math.min(100,v/maxV*100)}%"></div></td></tr>`);
+ }
+ $('decayRows').innerHTML=rows.join('');
+ $('results').style.display='block';
+}
+function toDate2(hm){const [h,m]=hm.split(':').map(Number);const d=new Date();d.setHours(h,m,0,0);if(d<new Date())d.setDate(d.getDate()+1);return d;}
+$('bed').addEventListener('change',calc);
+$('half').addEventListener('change',calc);
+</script>
+</body>
+</html>
